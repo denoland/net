@@ -1,6 +1,6 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
 
-import { relative, resolve } from "../path/mod.ts";
+import { relativePath, resolvePath } from "../fs/mod.ts";
 
 const CLOCKID_REALTIME = 0;
 const CLOCKID_MONOTONIC = 1;
@@ -905,7 +905,7 @@ export default class Context {
           const nameData = new TextEncoder().encode(entries[i].name);
 
           const entryInfo = Deno.statSync(
-            resolve(entry.path!, entries[i].name),
+            resolvePath(entry.path!, entries[i].name),
           );
           const entryData = new Uint8Array(24 + nameData.byteLength);
           const entryView = new DataView(entryData.buffer);
@@ -1079,7 +1079,7 @@ export default class Context {
           pathOffset,
           pathLength,
         );
-        const path = resolve(entry.path!, textDecoder.decode(data));
+        const path = resolvePath(entry.path!, textDecoder.decode(data));
 
         Deno.mkdirSync(path);
 
@@ -1108,7 +1108,7 @@ export default class Context {
           pathOffset,
           pathLength,
         );
-        const path = resolve(entry.path!, textDecoder.decode(data));
+        const path = resolvePath(entry.path!, textDecoder.decode(data));
 
         const memoryView = new DataView(this.#memory.buffer);
 
@@ -1206,7 +1206,7 @@ export default class Context {
           pathOffset,
           pathLength,
         );
-        const path = resolve(entry.path!, textDecoder.decode(data));
+        const path = resolvePath(entry.path!, textDecoder.decode(data));
 
         if ((fstflags & FSTFLAGS_ATIM_NOW) == FSTFLAGS_ATIM_NOW) {
           atim = BigInt(Date.now()) * BigInt(1e6);
@@ -1246,13 +1246,19 @@ export default class Context {
           oldPathOffset,
           oldPathLength,
         );
-        const oldPath = resolve(oldEntry.path!, textDecoder.decode(oldData));
+        const oldPath = resolvePath(
+          oldEntry.path!,
+          textDecoder.decode(oldData),
+        );
         const newData = new Uint8Array(
           this.#memory.buffer,
           newPathOffset,
           newPathLength,
         );
-        const newPath = resolve(newEntry.path!, textDecoder.decode(newData));
+        const newPath = resolvePath(
+          newEntry.path!,
+          textDecoder.decode(newData),
+        );
 
         Deno.linkSync(oldPath, newPath);
 
@@ -1285,9 +1291,12 @@ export default class Context {
           pathOffset,
           pathLength,
         );
-        const resolvedPath = resolve(entry.path!, textDecoder.decode(pathData));
+        const resolvedPath = resolvePath(
+          entry.path!,
+          textDecoder.decode(pathData),
+        );
 
-        if (relative(entry.path, resolvedPath).startsWith("..")) {
+        if (relativePath(entry.path, resolvedPath).startsWith("..")) {
           return ERRNO_NOTCAPABLE;
         }
 
@@ -1297,7 +1306,7 @@ export default class Context {
         ) {
           try {
             path = Deno.realPathSync(resolvedPath);
-            if (relative(entry.path, path).startsWith("..")) {
+            if (relativePath(entry.path, path).startsWith("..")) {
               return ERRNO_NOTCAPABLE;
             }
           } catch (_err) {
@@ -1430,7 +1439,10 @@ export default class Context {
           pathOffset,
           pathLength,
         );
-        const path = resolve(entry.path!, new TextDecoder().decode(pathData));
+        const path = resolvePath(
+          entry.path!,
+          new TextDecoder().decode(pathData),
+        );
 
         const link = Deno.readLinkSync(path);
         const linkData = new TextEncoder().encode(link);
@@ -1462,7 +1474,7 @@ export default class Context {
           pathOffset,
           pathLength,
         );
-        const path = resolve(entry.path!, textDecoder.decode(data));
+        const path = resolvePath(entry.path!, textDecoder.decode(data));
 
         if (!Deno.statSync(path).isDirectory) {
           return ERRNO_NOTDIR;
@@ -1497,13 +1509,19 @@ export default class Context {
           oldPathOffset,
           oldPathLength,
         );
-        const oldPath = resolve(oldEntry.path!, textDecoder.decode(oldData));
+        const oldPath = resolvePath(
+          oldEntry.path!,
+          textDecoder.decode(oldData),
+        );
         const newData = new Uint8Array(
           this.#memory.buffer,
           newPathOffset,
           newPathLength,
         );
-        const newPath = resolve(newEntry.path!, textDecoder.decode(newData));
+        const newPath = resolvePath(
+          newEntry.path!,
+          textDecoder.decode(newData),
+        );
 
         Deno.renameSync(oldPath, newPath);
 
@@ -1538,7 +1556,7 @@ export default class Context {
           newPathOffset,
           newPathLength,
         );
-        const newPath = resolve(entry.path!, textDecoder.decode(newData));
+        const newPath = resolvePath(entry.path!, textDecoder.decode(newData));
 
         Deno.symlinkSync(oldPath, newPath);
 
@@ -1565,7 +1583,7 @@ export default class Context {
           pathOffset,
           pathLength,
         );
-        const path = resolve(entry.path!, textDecoder.decode(data));
+        const path = resolvePath(entry.path!, textDecoder.decode(data));
 
         Deno.removeSync(path);
 

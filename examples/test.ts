@@ -1,6 +1,7 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
 import { assertEquals } from "../testing/asserts.ts";
-import { dirname, fromFileUrl, relative, resolve } from "../path/mod.ts";
+import { dirname, fromFileUrl } from "../path/mod.ts";
+import { relativePath, resolvePath } from "../fs/mod.ts";
 
 const moduleDir = dirname(fromFileUrl(import.meta.url));
 
@@ -21,8 +22,8 @@ Deno.test("catSmoke", async function (): Promise<void> {
       "run",
       "--quiet",
       "--allow-read",
-      relative(Deno.cwd(), resolve(moduleDir, "cat.ts")),
-      relative(Deno.cwd(), resolve(moduleDir, "..", "README.md")),
+      relativePath(Deno.cwd(), resolvePath(moduleDir, "cat.ts")),
+      relativePath(Deno.cwd(), resolvePath(moduleDir, "..", "README.md")),
     ],
     stdout: "null",
     stderr: "null",

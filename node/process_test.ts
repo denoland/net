@@ -101,6 +101,7 @@ Deno.test({
       cmd: [
         Deno.execPath(),
         "run",
+        "--unstable",
         "./process_exit_test.ts",
       ],
       cwd,
