@@ -1,6 +1,6 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
 import { parse } from "../flags/mod.ts";
-import { readStringDelim } from "../io/bufio.ts";
+import { readStringDelim } from "../io/buffer.ts";
 
 // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncFunction.
 const AsyncFunction = Object.getPrototypeOf(async function () {})

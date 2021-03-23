@@ -1,5 +1,5 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
-import { BufReader, BufWriter } from "../io/bufio.ts";
+import { Buffer, BufReader, BufWriter } from "../io/buffer.ts";
 import {
   assert,
   assertEquals,
@@ -23,7 +23,6 @@ import {
 import { delay } from "../async/delay.ts";
 import { serve } from "../http/server.ts";
 import { deferred } from "../async/deferred.ts";
-import { Buffer } from "../io/buffer.ts";
 
 Deno.test("[ws] read unmasked text frame", async () => {
   // unmasked single text frame with payload "Hello"

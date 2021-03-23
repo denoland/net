@@ -15,7 +15,7 @@ import {
   readMatrix,
 } from "./csv.ts";
 import { StringReader } from "../io/readers.ts";
-import { BufReader } from "../io/bufio.ts";
+import { BufReader } from "../io/buffer.ts";
 
 // Test cases for `readMatrix()`
 const testCases = [

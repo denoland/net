@@ -8,8 +8,7 @@ import {
   sliceLongToBytes,
 } from "./ioutil.ts";
 import { StringReader } from "./readers.ts";
-import { BufReader } from "./bufio.ts";
-import { Buffer } from "./buffer.ts";
+import { Buffer, BufReader } from "./buffer.ts";
 
 class BinaryReader implements Deno.Reader {
   index = 0;

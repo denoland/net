@@ -14,12 +14,10 @@ import {
   writeResponse,
   writeTrailers,
 } from "./_io.ts";
-import { BufReader, ReadLineResult } from "../io/bufio.ts";
 import { Response, ServerRequest } from "./server.ts";
 import { StringReader } from "../io/readers.ts";
 import { mockConn } from "./_mock_conn.ts";
-import { Buffer } from "../io/buffer.ts";
-import { readAll } from "../io/util.ts";
+import { Buffer, BufReader, readAll, ReadLineResult } from "../io/buffer.ts";
 
 Deno.test("bodyReader", async () => {
   const text = "Hello, Deno";

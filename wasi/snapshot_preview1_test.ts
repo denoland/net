@@ -3,7 +3,7 @@ import Context from "./snapshot_preview1.ts";
 import { assertEquals, assertThrows } from "../testing/asserts.ts";
 import { copy } from "../fs/mod.ts";
 import * as path from "../path/mod.ts";
-import { readAll, writeAll } from "../io/util.ts";
+import { readAll, writeAll } from "../io/buffer.ts";
 
 const tests = [
   "testdata/std_env_args.wasm",

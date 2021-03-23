@@ -4,8 +4,7 @@ import { walk } from "../../fs/walk.ts";
 import { basename, fromFileUrl, join, resolve } from "../../path/mod.ts";
 import { ensureFile } from "../../fs/ensure_file.ts";
 import { config, ignoreList } from "./common.ts";
-import { Buffer } from "../../io/buffer.ts";
-import { readAll, writeAll } from "../../io/util.ts";
+import { Buffer, readAll, writeAll } from "../../io/buffer.ts";
 
 /**
  * This script will download and extract the test files specified in the
