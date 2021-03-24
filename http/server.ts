@@ -11,7 +11,7 @@ import {
 } from "./_io.ts";
 import { readAll } from "../io/util.ts";
 
-export class ServerRequest {
+export class ServerRequest extends EventTarget {
   url!: string;
   method!: string;
   proto!: string;
@@ -84,6 +84,8 @@ export class ServerRequest {
 
   async respond(r: Response): Promise<void> {
     let err: Error | undefined;
+    const cancelled = !this.dispatchEvent(new CustomEvent('before-respond', { cancelable: true }))
+    if (cancelled) return
     try {
       // Write our response!
       await writeResponse(this.w, r);
@@ -96,6 +98,7 @@ export class ServerRequest {
       }
       err = e;
     }
+    this.dispatchEvent(new CustomEvent('after-respond'))
     // Signal that this request has been processed and the next pipelined
     // request on the same connection can be accepted.
     this.#done.resolve(err);
