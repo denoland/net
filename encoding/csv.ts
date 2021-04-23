@@ -4,7 +4,7 @@
 // https://github.com/golang/go/blob/master/LICENSE
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
 
-import { BufReader } from "../io/bufio.ts";
+import { BufReader } from "../io/buffer.ts";
 import { TextProtoReader } from "../textproto/mod.ts";
 import { StringReader } from "../io/readers.ts";
 import { assert } from "../_util/assert.ts";

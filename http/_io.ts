@@ -1,10 +1,10 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
-import { BufReader, BufWriter } from "../io/bufio.ts";
+import { BufReader, BufWriter } from "../io/buffer.ts";
 import { TextProtoReader } from "../textproto/mod.ts";
 import { assert } from "../_util/assert.ts";
 import { Response, ServerRequest } from "./server.ts";
 import { STATUS_TEXT } from "./http_status.ts";
-import { iter } from "../io/util.ts";
+import { iterateReader } from "../io/streams.ts";
 
 const encoder = new TextEncoder();
 
@@ -176,7 +176,7 @@ export async function writeChunkedBody(
   w: BufWriter,
   r: Deno.Reader,
 ) {
-  for await (const chunk of iter(r)) {
+  for await (const chunk of iterateReader(r)) {
     if (chunk.byteLength <= 0) continue;
     const start = encoder.encode(`${chunk.byteLength.toString(16)}\r\n`);
     const end = encoder.encode("\r\n");

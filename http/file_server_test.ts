@@ -4,12 +4,12 @@ import {
   assertEquals,
   assertStringIncludes,
 } from "../testing/asserts.ts";
-import { BufReader } from "../io/bufio.ts";
+import { BufReader, readAll, writeAll } from "../io/buffer.ts";
 import { TextProtoReader } from "../textproto/mod.ts";
 import { Response, ServerRequest } from "./server.ts";
 import { FileServerArgs, serveFile } from "./file_server.ts";
 import { dirname, fromFileUrl, join, resolve } from "../path/mod.ts";
-import { iter, readAll, writeAll } from "../io/util.ts";
+import { iterateReader } from "../io/streams.ts";
 
 let fileServer: Deno.Process<Deno.RunOptions & { stdout: "piped" }>;
 
@@ -104,7 +104,7 @@ async function fetchExactPath(
     let currentResult = "";
     let contentLength = -1;
     let startOfBody = -1;
-    for await (const chunk of iter(conn)) {
+    for await (const chunk of iterateReader(conn)) {
       currentResult += decoder.decode(chunk);
       if (contentLength === -1) {
         const match = /^content-length: (.*)$/m.exec(currentResult);

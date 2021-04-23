@@ -3,11 +3,10 @@ import { equals, indexOf, lastIndexOf, startsWith } from "../bytes/mod.ts";
 import { copyN } from "../io/ioutil.ts";
 import { MultiReader } from "../io/readers.ts";
 import { extname } from "../path/mod.ts";
-import { BufReader, BufWriter } from "../io/bufio.ts";
 import { assert } from "../_util/assert.ts";
 import { TextProtoReader } from "../textproto/mod.ts";
 import { hasOwnProperty } from "../_util/has_own_property.ts";
-import { Buffer } from "../io/buffer.ts";
+import { Buffer, BufReader, BufWriter } from "../io/buffer.ts";
 
 /** FormFile object */
 export interface FormFile {

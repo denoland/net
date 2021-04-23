@@ -3,7 +3,7 @@ import { assertEquals } from "../testing/asserts.ts";
 import { LimitedReader, MultiReader, StringReader } from "./readers.ts";
 import { StringWriter } from "./writers.ts";
 import { copyN } from "./ioutil.ts";
-import { readAll } from "../io/util.ts";
+import { readAll } from "./buffer.ts";
 
 Deno.test("ioStringReader", async function () {
   const r = new StringReader("abcdef");

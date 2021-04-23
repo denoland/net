@@ -1,6 +1,6 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
 import { hasOwnProperty } from "../_util/has_own_property.ts";
-import { BufReader, BufWriter } from "../io/bufio.ts";
+import { BufReader, BufWriter } from "../io/buffer.ts";
 import { readLong, readShort, sliceLongToBytes } from "../io/ioutil.ts";
 import { Sha1 } from "../hash/sha1.ts";
 import { writeResponse } from "../http/_io.ts";

@@ -21,12 +21,16 @@ import {
   ServerRequest,
   serveTLS,
 } from "./server.ts";
-import { BufReader, BufWriter } from "../io/bufio.ts";
 import { delay } from "../async/delay.ts";
 import { mockConn } from "./_mock_conn.ts";
 import { dirname, fromFileUrl, join, resolve } from "../path/mod.ts";
-import { Buffer } from "../io/buffer.ts";
-import { readAll, writeAll } from "../io/util.ts";
+import {
+  Buffer,
+  BufReader,
+  BufWriter,
+  readAll,
+  writeAll,
+} from "../io/buffer.ts";
 
 const moduleDir = dirname(fromFileUrl(import.meta.url));
 const testdataDir = resolve(moduleDir, "testdata");

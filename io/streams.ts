@@ -1,7 +1,102 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
 
-import { Buffer } from "./buffer.ts";
-import { writeAll } from "./util.ts";
+import { Buffer, writeAll } from "./buffer.ts";
+
+const DEFAULT_BUFFER_SIZE = 32 * 1024;
+
+/** Turns a `Deno.Reader`, `r`, into an async iterator.
+ *
+ * ```ts
+ * let f = await Deno.open("/etc/passwd");
+ * for await (const chunk of iterateReader(f)) {
+ *   console.log(chunk);
+ * }
+ * f.close();
+ * ```
+ *
+ * Second argument can be used to tune size of a buffer.
+ * Default size of the buffer is 32kB.
+ *
+ * ```ts
+ * let f = await Deno.open("/etc/passwd");
+ * const iter = iterateReader(f, {
+ *   bufSize: 1024 * 1024
+ * });
+ * for await (const chunk of iter) {
+ *   console.log(chunk);
+ * }
+ * f.close();
+ * ```
+ *
+ * Iterator uses an internal buffer of fixed size for efficiency; it returns
+ * a view on that buffer on each iteration. It is therefore caller's
+ * responsibility to copy contents of the buffer if needed; otherwise the
+ * next iteration will overwrite contents of previously returned chunk.
+ */
+export async function* iterateReader(
+  r: Deno.Reader,
+  options?: {
+    bufSize?: number;
+  },
+): AsyncIterableIterator<Uint8Array> {
+  const bufSize = options?.bufSize ?? DEFAULT_BUFFER_SIZE;
+  const b = new Uint8Array(bufSize);
+  while (true) {
+    const result = await r.read(b);
+    if (result === null) {
+      break;
+    }
+
+    yield b.subarray(0, result);
+  }
+}
+
+/** Turns a Deno.ReaderSync, `r`, into an iterator.
+ *
+ * ```ts
+ * let f = Deno.openSync("/etc/passwd");
+ * for (const chunk of iterateReaderSync(f)) {
+ *   console.log(chunk);
+ * }
+ * f.close();
+ * ```
+ *
+ * Second argument can be used to tune size of a buffer.
+ * Default size of the buffer is 32kB.
+ *
+ * ```ts
+ * let f = await Deno.open("/etc/passwd");
+ * const iter = iterateReaderSync(f, {
+ *   bufSize: 1024 * 1024
+ * });
+ * for (const chunk of iter) {
+ *   console.log(chunk);
+ * }
+ * f.close();
+ * ```
+ *
+ * Iterator uses an internal buffer of fixed size for efficiency; it returns
+ * a view on that buffer on each iteration. It is therefore caller's
+ * responsibility to copy contents of the buffer if needed; otherwise the
+ * next iteration will overwrite contents of previously returned chunk.
+ */
+export function* iterateReaderSync(
+  r: Deno.ReaderSync,
+  options?: {
+    bufSize?: number;
+  },
+): IterableIterator<Uint8Array> {
+  const bufSize = options?.bufSize ?? DEFAULT_BUFFER_SIZE;
+  const b = new Uint8Array(bufSize);
+  while (true) {
+    const result = r.readSync(b);
+    if (result === null) {
+      break;
+    }
+
+    yield b.subarray(0, result);
+  }
+}
 
 const DEFAULT_CHUNK_SIZE = 16_640;
 
@@ -58,7 +153,7 @@ export function readerFromIterable(
   };
 }
 
-/** Create a `Writer` from a `WritableStreamDefaultReader`. */
+/** Create a `Deno.Writer` from a `WritableStreamDefaultReader`. */
 export function writerFromStreamWriter(
   streamWriter: WritableStreamDefaultWriter<Uint8Array>,
 ): Deno.Writer {
@@ -71,7 +166,7 @@ export function writerFromStreamWriter(
   };
 }
 
-/** Create a `Reader` from a `ReadableStreamDefaultReader`. */
+/** Create a `Deno.Reader` from a `ReadableStreamDefaultReader`. */
 export function readerFromStreamReader(
   streamReader: ReadableStreamDefaultReader<Uint8Array>,
 ): Deno.Reader {
@@ -93,7 +188,7 @@ export function readerFromStreamReader(
   };
 }
 
-/** Create a `WritableStream` from a `Writer`. */
+/** Create a `WritableStream` from a `Deno.Writer`. */
 export function writableStreamFromWriter(
   writer: Deno.Writer,
 ): WritableStream<Uint8Array> {

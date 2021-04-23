@@ -1,5 +1,5 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
-import type { BufReader } from "./bufio.ts";
+import type { BufReader } from "./buffer.ts";
 type Reader = Deno.Reader;
 type Writer = Deno.Writer;
 import { assert } from "../_util/assert.ts";

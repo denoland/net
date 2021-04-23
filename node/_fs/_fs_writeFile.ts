@@ -2,7 +2,7 @@
 import { Encodings, notImplemented } from "../_utils.ts";
 import { fromFileUrl } from "../path.ts";
 import { Buffer } from "../buffer.ts";
-import { writeAll, writeAllSync } from "../../io/util.ts";
+import { writeAll, writeAllSync } from "../../io/buffer.ts";
 import {
   CallbackWithError,
   checkEncoding,
