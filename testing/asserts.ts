@@ -204,13 +204,17 @@ export function assert(expr: unknown, msg = ""): asserts expr {
 export function assertEquals(
   actual: unknown,
   expected: unknown,
-  msg?: string,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string),
 ): void;
-export function assertEquals<T>(actual: T, expected: T, msg?: string): void;
+export function assertEquals<T>(
+  actual: T,
+  expected: T,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string),
+): void;
 export function assertEquals(
   actual: unknown,
   expected: unknown,
-  msg?: string,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string), // uses first and second for the callback because ts complains when using actual/expected
 ): void {
   if (equal(actual, expected)) {
     return;
@@ -229,7 +233,11 @@ export function assertEquals(
     message = `\n${red(CAN_NOT_DISPLAY)} + \n\n`;
   }
   if (msg) {
-    message = msg;
+    if (typeof msg === "string") {
+      message = msg;
+    } else if (typeof msg === "function") {
+      message = msg(actual, expected);
+    }
   }
   throw new AssertionError(message);
 }
@@ -247,19 +255,24 @@ export function assertEquals(
 export function assertNotEquals(
   actual: unknown,
   expected: unknown,
-  msg?: string,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string),
 ): void;
-export function assertNotEquals<T>(actual: T, expected: T, msg?: string): void;
+export function assertNotEquals<T>(
+  actual: T,
+  expected: T,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string),
+): void;
 export function assertNotEquals(
   actual: unknown,
   expected: unknown,
-  msg?: string,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string),
 ): void {
   if (!equal(actual, expected)) {
     return;
   }
   let actualString: string;
   let expectedString: string;
+  let message = "";
   try {
     actualString = String(actual);
   } catch {
@@ -271,9 +284,15 @@ export function assertNotEquals(
     expectedString = "[Cannot display]";
   }
   if (!msg) {
-    msg = `actual: ${actualString} expected: ${expectedString}`;
+    message = `actual: ${actualString} expected: ${expectedString}`;
+  } else if (msg) {
+    if (typeof msg === "string") {
+      message = msg;
+    } else if (typeof msg === "function") {
+      message = msg(expected, actual);
+    }
   }
-  throw new AssertionError(msg);
+  throw new AssertionError(message);
 }
 
 /**
@@ -286,17 +305,17 @@ export function assertNotEquals(
 export function assertStrictEquals(
   actual: unknown,
   expected: unknown,
-  msg?: string,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string),
 ): void;
 export function assertStrictEquals<T>(
   actual: T,
   expected: T,
-  msg?: string,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string),
 ): void;
 export function assertStrictEquals(
   actual: unknown,
   expected: unknown,
-  msg?: string,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string),
 ): void {
   if (actual === expected) {
     return;
@@ -304,8 +323,10 @@ export function assertStrictEquals(
 
   let message: string;
 
-  if (msg) {
+  if (msg && typeof msg === "string") {
     message = msg;
+  } else if (msg && typeof msg === "function") {
+    message = msg(actual, expected);
   } else {
     const actualString = _format(actual);
     const expectedString = _format(expected);
@@ -346,25 +367,37 @@ export function assertStrictEquals(
 export function assertNotStrictEquals(
   actual: unknown,
   expected: unknown,
-  msg?: string,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string),
 ): void;
 export function assertNotStrictEquals<T>(
   actual: T,
   expected: T,
-  msg?: string,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string),
 ): void;
 export function assertNotStrictEquals(
   actual: unknown,
   expected: unknown,
-  msg?: string,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string),
 ): void {
   if (actual !== expected) {
     return;
   }
 
-  throw new AssertionError(
-    msg ?? `Expected "actual" to be strictly unequal to: ${_format(actual)}\n`,
-  );
+  let message = "";
+
+  if (msg) {
+    if (typeof msg === "string") {
+      message = msg;
+    } else if (typeof msg === "function") {
+      message = msg(actual, expected);
+    }
+  } else {
+    message = `Expected "actual" to be strictly unequal to: ${
+      _format(actual)
+    }\n`;
+  }
+
+  throw new AssertionError(message);
 }
 
 /**
@@ -373,14 +406,22 @@ export function assertNotStrictEquals(
  */
 export function assertExists(
   actual: unknown,
-  msg?: string,
+  msg?: string | ((first: typeof actual) => string),
 ): void {
   if (actual === undefined || actual === null) {
-    if (!msg) {
-      msg =
+    let message = "";
+
+    if (msg) {
+      if (typeof msg === "string") {
+        message = msg;
+      } else if (typeof msg === "function") {
+        message = msg(actual);
+      }
+    } else {
+      message =
         `actual: "${actual}" expected to match anything but null or undefined`;
     }
-    throw new AssertionError(msg);
+    throw new AssertionError(message);
   }
 }
 
@@ -391,13 +432,21 @@ export function assertExists(
 export function assertStringIncludes(
   actual: string,
   expected: string,
-  msg?: string,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string),
 ): void {
   if (!actual.includes(expected)) {
-    if (!msg) {
-      msg = `actual: "${actual}" expected to contain: "${expected}"`;
+    let message = "";
+
+    if (msg) {
+      if (typeof msg === "string") {
+        message = msg;
+      } else if (typeof msg === "function") {
+        message = msg(actual, expected);
+      }
+    } else {
+      message = `actual: "${actual}" expected to contain: "${expected}"`;
     }
-    throw new AssertionError(msg);
+    throw new AssertionError(message);
   }
 }
 
@@ -414,17 +463,17 @@ export function assertStringIncludes(
 export function assertArrayIncludes(
   actual: ArrayLike<unknown>,
   expected: ArrayLike<unknown>,
-  msg?: string,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string),
 ): void;
 export function assertArrayIncludes<T>(
   actual: ArrayLike<T>,
   expected: ArrayLike<T>,
-  msg?: string,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string),
 ): void;
 export function assertArrayIncludes(
   actual: ArrayLike<unknown>,
   expected: ArrayLike<unknown>,
-  msg?: string,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string),
 ): void {
   const missing: unknown[] = [];
   for (let i = 0; i < expected.length; i++) {
@@ -442,12 +491,20 @@ export function assertArrayIncludes(
   if (missing.length === 0) {
     return;
   }
-  if (!msg) {
-    msg = `actual: "${_format(actual)}" expected to include: "${
+
+  let message = "";
+  if (msg) {
+    if (typeof msg === "string") {
+      message = msg;
+    } else if (typeof msg === "function") {
+      message = msg(actual, expected);
+    }
+  } else {
+    message = `actual: "${_format(actual)}" expected to include: "${
       _format(expected)
     }"\nmissing: ${_format(missing)}`;
   }
-  throw new AssertionError(msg);
+  throw new AssertionError(message);
 }
 
 /**
@@ -457,13 +514,20 @@ export function assertArrayIncludes(
 export function assertMatch(
   actual: string,
   expected: RegExp,
-  msg?: string,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string),
 ): void {
   if (!expected.test(actual)) {
-    if (!msg) {
-      msg = `actual: "${actual}" expected to match: "${expected}"`;
+    let message = "";
+    if (msg) {
+      if (typeof msg === "string") {
+        message = msg;
+      } else if (typeof msg === "function") {
+        message = msg(actual, expected);
+      }
+    } else {
+      message = `actual: "${actual}" expected to match: "${expected}"`;
     }
-    throw new AssertionError(msg);
+    throw new AssertionError(message);
   }
 }
 
@@ -474,13 +538,20 @@ export function assertMatch(
 export function assertNotMatch(
   actual: string,
   expected: RegExp,
-  msg?: string,
+  msg?: string | ((first: typeof actual, second: typeof expected) => string),
 ): void {
   if (expected.test(actual)) {
-    if (!msg) {
-      msg = `actual: "${actual}" expected to not match: "${expected}"`;
+    let message = "";
+    if (msg) {
+      if (typeof msg === "string") {
+        message = msg;
+      } else if (typeof msg === "function") {
+        message = msg(actual, expected);
+      }
+    } else {
+      message = `actual: "${actual}" expected to not match: "${expected}"`;
     }
-    throw new AssertionError(msg);
+    throw new AssertionError(message);
   }
 }
 
