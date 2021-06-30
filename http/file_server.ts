@@ -9,10 +9,11 @@
 import { extname, posix } from "../path/mod.ts";
 import {
   HTTPSOptions,
-  listenAndServe,
-  listenAndServeTLS,
   Response,
+  serve,
+  Server,
   ServerRequest,
+  serveTLS,
 } from "./server.ts";
 import { parse } from "../flags/mod.ts";
 import { assert } from "../_util/assert.ts";
@@ -375,6 +376,16 @@ function normalizeURL(url: string): string {
     : normalizedUrl;
 }
 
+function addrToString(addr: Deno.Addr) {
+  assert(addr.transport == "tcp");
+  if (addr.hostname.indexOf(":") >= 0 && addr.hostname[0] != "[") {
+    // Print "[ip]:port" for IPv6 addresses.
+    return `[${addr.hostname}]:${addr.port}`;
+  } else {
+    return `${addr.hostname}:${addr.port}`;
+  }
+}
+
 function main(): void {
   const CORSEnabled = serverArgs.cors ? true : false;
   const port = serverArgs.port ?? serverArgs.p ?? 4507;
@@ -451,15 +462,36 @@ function main(): void {
     }
   };
 
+  let server: Server;
   let proto = "http";
   if (tlsOpts.keyFile || tlsOpts.certFile) {
     proto += "s";
     tlsOpts.hostname = host;
     tlsOpts.port = port;
-    listenAndServeTLS(tlsOpts, handler);
+    server = serveTLS(tlsOpts);
   } else {
-    listenAndServe(addr, handler);
+    server = serve(addr);
   }
+
+  server.addEventListener("error", (evt) => {
+    if (evt.origin == "request") {
+      console.error(
+        `Error occurred while reading the request from ${
+          addrToString(evt.connection!.remoteAddr)
+        }:`,
+        evt.error,
+      );
+    } else {
+      console.error(evt.error);
+    }
+  });
+
+  (async () => {
+    for await (const req of server) {
+      handler(req);
+    }
+  })();
+
   console.log(`${proto.toUpperCase()} server listening on ${proto}://${addr}/`);
 }
 
