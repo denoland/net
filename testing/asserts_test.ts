@@ -179,6 +179,16 @@ Deno.test("testingEqual", function (): void {
       })({ hello: "world" }),
     ),
   );
+  assert(
+    !equal(
+      new class A {
+        private hello = "world";
+      }(),
+      new class B {
+        private hello = "world";
+      }(),
+    ),
+  );
 });
 
 Deno.test("testingNotEquals", function (): void {

@@ -202,6 +202,9 @@ export function equal(c: unknown, d: unknown): boolean {
         if (!(a instanceof WeakRef && b instanceof WeakRef)) return false;
         return compare(a.deref(), b.deref());
       }
+      if (a && b && (a.constructor !== b.constructor)) {
+        return false;
+      }
       return true;
     }
     return false;
