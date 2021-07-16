@@ -21,12 +21,18 @@ export class LoggerConfig {
 }
 
 export interface LogConfig {
+  /**
+   * Map of handlers. The key is the name of the handler.
+   * Note that "default" is a special handler name that is used for unnamed loggers
+   */
   handlers?: {
     [name: string]: BaseHandler;
   };
   loggers?: {
     [name: string]: LoggerConfig;
   };
+  /** Fallback logger that is used if a logger with a name is created but not configured via the setup function */
+  fallbackLogger?: LoggerConfig;
 }
 
 const DEFAULT_LEVEL = "INFO";
@@ -69,7 +75,12 @@ export function getLogger(name?: string): Logger {
   }
   const result = state.loggers.get(name);
   if (!result) {
-    const logger = new Logger(name, "NOTSET", { handlers: [] });
+    const handlers = getHandlersByName(state.config.fallbackLogger?.handlers);
+    const logger = new Logger(
+      name,
+      state.config.fallbackLogger?.level ?? "NOTSET",
+      { handlers },
+    );
     state.loggers.set(name, logger);
     return logger;
   }
@@ -166,6 +177,10 @@ export async function setup(config: LogConfig) {
   state.config = {
     handlers: { ...DEFAULT_CONFIG.handlers, ...config.handlers },
     loggers: { ...DEFAULT_CONFIG.loggers, ...config.loggers },
+    fallbackLogger: {
+      handlers: config.fallbackLogger?.handlers,
+      level: config.fallbackLogger?.level,
+    },
   };
 
   // tear down existing handlers
@@ -190,20 +205,24 @@ export async function setup(config: LogConfig) {
   const loggers = state.config.loggers || {};
   for (const loggerName in loggers) {
     const loggerConfig = loggers[loggerName];
-    const handlerNames = loggerConfig.handlers || [];
-    const handlers: BaseHandler[] = [];
-
-    handlerNames.forEach((handlerName): void => {
-      const handler = state.handlers.get(handlerName);
-      if (handler) {
-        handlers.push(handler);
-      }
-    });
-
+    const handlers: BaseHandler[] = getHandlersByName(loggerConfig.handlers);
     const levelName = loggerConfig.level || DEFAULT_LEVEL;
     const logger = new Logger(loggerName, levelName, { handlers: handlers });
     state.loggers.set(loggerName, logger);
   }
+}
+
+function getHandlersByName(
+  handlerNames: string[] | undefined = [],
+): BaseHandler[] {
+  const handlers: BaseHandler[] = [];
+  handlerNames.forEach((handlerName): void => {
+    const handler = state.handlers.get(handlerName);
+    if (handler) {
+      handlers.push(handler);
+    }
+  });
+  return handlers;
 }
 
 await setup(DEFAULT_CONFIG);

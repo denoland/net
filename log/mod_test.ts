@@ -220,3 +220,66 @@ Deno.test({
     assertEquals(testHandlerB.messages.length, 2);
   },
 });
+
+Deno.test({
+  name: "Not configured logger should log nothing",
+  async fn() {
+    const testHandler = new TestHandler("DEBUG");
+    await setup({
+      handlers: {
+        test: testHandler,
+      },
+      loggers: {
+        configured: {
+          level: "DEBUG",
+          handlers: ["test"],
+        },
+      },
+    });
+    const configuredLogger = getLogger("configured");
+    const notConfiguredLogger = getLogger("notconfigured");
+
+    configuredLogger.info("Log something from configured logger");
+    notConfiguredLogger.info("Log something from a not configured logger");
+
+    assertEquals(testHandler.messages, [
+      "INFO Log something from configured logger",
+    ]);
+  },
+});
+
+Deno.test({
+  name:
+    "Not configured logger should log something if fallback handler has been set",
+  async fn() {
+    const testHandler = new TestHandler("DEBUG");
+    await setup({
+      handlers: {
+        test: testHandler,
+      },
+      loggers: {
+        configured: {
+          level: "DEBUG",
+          handlers: ["test"],
+        },
+      },
+      fallbackLogger: {
+        level: "INFO",
+        handlers: ["test"],
+      },
+    });
+    const configuredLogger = getLogger("configured");
+    const notConfiguredLogger = getLogger("notconfigured");
+
+    configuredLogger.info("Log something from configured logger");
+    notConfiguredLogger.info("Log something from a not configured logger");
+    notConfiguredLogger.debug(
+      "Log something from a not configured logger with debug",
+    );
+
+    assertEquals(testHandler.messages, [
+      "INFO Log something from configured logger",
+      "INFO Log something from a not configured logger",
+    ]);
+  },
+});

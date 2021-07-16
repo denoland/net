@@ -314,3 +314,41 @@ await log.setup({
 const data: string | undefined = logger.debug(() => someExpenseFn(5, true));
 console.log(data); // undefined
 ```
+
+### Configuring a fallback logger
+
+If you call `getLogger()` without any argument then you will get the default
+logger. If you call `getLogger("bar")` with a logger name that has not been
+configured then you will get a logger without any handlers (nothing will be
+logged). By configuring a fallback logger you can specify handlers and a log
+level that should be used if `getLogger` is called with a logger name that has
+not been configured explitly in the `setup` call.
+
+```ts
+import {
+  ConsoleHandler,
+  getLogger,
+  setup,
+} from "https://deno.land/std@$STD_VERSION/log/mod.ts";
+
+await setup({
+  handlers: {
+    console: new ConsoleHandler("DEBUG"),
+  },
+  loggers: {
+    configured: {
+      level: "DEBUG",
+      handlers: ["console"],
+    },
+  },
+  fallbackLogger: {
+    level: "INFO",
+    handlers: ["console"],
+  },
+});
+
+const configuredLogger = getLogger("configured");
+configuredLogger.info("foo"); // will log "foo"
+const notConfiguredLogger = getLogger("NotConfigured");
+notConfiguredLogger.info("bar"); // will log "bar" instead of nothing
+```
