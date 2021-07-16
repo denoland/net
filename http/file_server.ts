@@ -17,7 +17,6 @@ import {
 import { parse } from "../flags/mod.ts";
 import { assert } from "../_util/assert.ts";
 import { readRange } from "../io/util.ts";
-import { createHash } from "../hash/mod.ts";
 
 interface EntryInfo {
   mode: string;
@@ -187,6 +186,19 @@ function contentType(path: string): string | undefined {
   return MEDIA_TYPES[extname(path)];
 }
 
+// Generates a SHA-1 hash for the provided string
+const createEtagHash = async (message: string) => {
+  // see: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest
+  const hashType = "SHA-1"; // Faster, and this isn't a security senitive cryptographic use case
+  const msgUint8 = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest(hashType, msgUint8);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join(
+    "",
+  );
+  return hashHex;
+};
+
 function modeToString(isDir: boolean, maybeMode: number | null): string {
   const modeMap = ["---", "--x", "-w-", "-wx", "r--", "r-x", "rw-", "rwx"];
 
@@ -268,9 +280,9 @@ export async function serveFile(
     headers.set("last-modified", lastModified.toUTCString());
 
     // Create a simple etag that is an md5 of the last modified date and filesize concatenated
-    const simpleEtag = createHash("md5").update(
+    const simpleEtag = await createEtagHash(
       `${lastModified.toJSON()}${fileInfo.size}`,
-    ).toString();
+    );
     headers.set("etag", simpleEtag);
 
     // If a `if-node-match` header is present and the value matches the tag return 304

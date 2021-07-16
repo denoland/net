@@ -10,7 +10,6 @@ import { Response } from "./server.ts";
 import { FileServerArgs } from "./file_server.ts";
 import { dirname, fromFileUrl, join, resolve } from "../path/mod.ts";
 import { iter, readAll, writeAll } from "../io/util.ts";
-import { createHash } from "../hash/mod.ts";
 
 let fileServer: Deno.Process<Deno.RunOptions & { stdout: "piped" }>;
 
@@ -568,13 +567,25 @@ const getTestFileEtag = async () => {
 
   if (fileInfo.mtime instanceof Date) {
     const lastModified = new Date(fileInfo.mtime);
-    const simpleEtag = createHash("md5").update(
+    const simpleEtag = await createEtagHash(
       `${lastModified.toJSON()}${fileInfo.size}`,
-    ).toString();
+    );
     return simpleEtag;
   } else {
     return "";
   }
+};
+
+const createEtagHash = async (message: string) => {
+  // see: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest
+  const hashType = "SHA-1"; // Faster, and this isn't a security senitive cryptographic use case
+  const msgUint8 = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest(hashType, msgUint8);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join(
+    "",
+  );
+  return hashHex;
 };
 
 Deno.test(
