@@ -164,8 +164,8 @@ function validateDomain(domain: string): void {
  * Parse the cookies of the Server Request
  * @param req An object which has a `headers` property
  */
-export function getCookies(req: { headers: Headers }): Record<string, string> {
-  const cookie = req.headers.get("Cookie");
+export function getCookies(headers: Headers): Record<string, string> {
+  const cookie = headers.get("Cookie");
   if (cookie != null) {
     const out: Record<string, string> = {};
     const c = cookie.split(";");
@@ -192,16 +192,13 @@ export function getCookies(req: { headers: Headers }): Record<string, string> {
  *   httpOnly: true, secure: true, maxAge: 2, domain: "deno.land" });
  * ```
  */
-export function setCookie(res: { headers?: Headers }, cookie: Cookie): void {
-  if (!res.headers) {
-    res.headers = new Headers();
-  }
+export function setCookie(headers: Headers, cookie: Cookie): void {
   // TODO(zekth) : Add proper parsing of Set-Cookie headers
   // Parsing cookie headers to make consistent set-cookie header
   // ref: https://tools.ietf.org/html/rfc6265#section-4.1.1
   const v = toString(cookie);
   if (v) {
-    res.headers.append("Set-Cookie", v);
+    headers.append("Set-Cookie", v);
   }
 }
 
@@ -216,11 +213,11 @@ export function setCookie(res: { headers?: Headers }, cookie: Cookie): void {
  *     deleteCookie(res,'foo', {domain:'deno.land'});
  */
 export function deleteCookie(
-  res: { headers?: Headers },
+  headers: Headers,
   name: string,
   attributes?: { path?: string; domain?: string },
 ): void {
-  setCookie(res, {
+  setCookie(headers, {
     name: name,
     value: "",
     expires: new Date(0),
