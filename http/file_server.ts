@@ -187,17 +187,17 @@ function contentType(path: string): string | undefined {
 }
 
 // Generates a SHA-1 hash for the provided string
-const createEtagHash = async (message: string) => {
-  // see: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest
+async function createEtagHash(message: string) {
+  const byteToHex = (b: number) => b.toString(16).padStart(2, "00");
   const hashType = "SHA-1"; // Faster, and this isn't a security senitive cryptographic use case
+
+  // see: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest
   const msgUint8 = new TextEncoder().encode(message);
   const hashBuffer = await crypto.subtle.digest(hashType, msgUint8);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join(
-    "",
-  );
+  const hashHex = hashArray.map(byteToHex).join("");
   return hashHex;
-};
+}
 
 function modeToString(isDir: boolean, maybeMode: number | null): string {
   const modeMap = ["---", "--x", "-w-", "-wx", "r--", "r-x", "rw-", "rwx"];
