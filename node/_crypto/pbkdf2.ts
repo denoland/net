@@ -1,4 +1,8 @@
-import { createHash } from "../../hash/mod.ts";
+import crypto from "../../crypto/mod.ts";
+import {
+  DigestAlgorithm,
+  digestAliases,
+} from "../../_wasm_crypto/algorithms.ts";
 import { Buffer } from "../buffer.ts";
 import { MAX_ALLOC } from "./constants.ts";
 import { HASH_DATA } from "./types.ts";
@@ -23,19 +27,16 @@ type Algorithms =
   | "sha512";
 
 function createHasher(alg: Algorithms) {
-  let normalizedAlg: NormalizedAlgorithms;
-  if (alg === "rmd160") {
-    normalizedAlg = "ripemd160";
-  } else {
-    normalizedAlg = alg;
-  }
+  const normalizedAlg: DigestAlgorithm = digestAliases[alg.toUpperCase()] ??
+    alg.toUpperCase();
   return (value: Uint8Array) =>
-    Buffer.from(createHash(normalizedAlg).update(value).digest());
+    new Buffer(crypto.subtle.digestSync(normalizedAlg, value));
 }
 
 function getZeroes(zeros: number) {
   return Buffer.alloc(zeros);
 }
+
 const sizes = {
   md5: 16,
   sha1: 20,

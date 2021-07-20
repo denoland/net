@@ -2,7 +2,9 @@
 import { hasOwnProperty } from "../_util/has_own_property.ts";
 import { BufReader, BufWriter } from "../io/bufio.ts";
 import { readLong, readShort, sliceLongToBytes } from "../io/ioutil.ts";
-import { Sha1 } from "../hash/sha1.ts";
+import crypto from "../crypto/mod.ts";
+import * as base64 from "../encoding/base64.ts";
+
 import { writeResponse } from "../http/_io.ts";
 import { TextProtoReader } from "../textproto/mod.ts";
 import { Deferred, deferred } from "../async/deferred.ts";
@@ -410,10 +412,9 @@ const kGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
 /** Create value of Sec-WebSocket-Accept header from inputted nonce. */
 export function createSecAccept(nonce: string): string {
-  const sha1 = new Sha1();
-  sha1.update(nonce + kGUID);
-  const bytes = sha1.digest();
-  return btoa(String.fromCharCode(...bytes));
+  return base64.encode(
+    crypto.subtle.digestSync("SHA-1", new TextEncoder().encode(nonce + kGUID)),
+  );
 }
 
 /** Upgrade inputted TCP connection into WebSocket connection. */

@@ -1,0 +1,41 @@
+[package]
+name = "deno_std_wasm_crypto"
+publish = false
+version = "0.0.0"
+authors = ["the Deno authors"]
+edition = "2018"
+license = "MIT"
+repository = "https://github.com/denoland/deno_std"
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+lto = true
+opt-level = 3
+
+[dependencies]
+blake2 = "0.9.1"
+blake3 = "0.3.8"
+derive_more = "0.99.16"
+digest = "0.9.0"
+js-sys = "0.3.51"
+md-5 = "0.9.1"
+ripemd160 = "0.9.1"
+serde-wasm-bindgen = "0.3.0"
+sha2 = "0.9.5"
+sha3 = "0.9.1"
+wasm-bindgen = "0.2.74"
+
+[dependencies.ring]
+version = "0.16.20"
+features = [
+    "alloc",
+    "wasm32_c",
+]
+
+[dependencies.web-sys]
+version = "0.3.51"
+features = [
+    "BinaryType",
+]

@@ -82,7 +82,7 @@ jobs:
         run: |-
           set -o errexit
           shopt -s inherit_errexit
-          declare modifications="$(git diff --name-only HEAD~ -- ./hash/_wasm/)"
+          declare modifications="$(git diff --name-only HEAD~ -- ./_wasm_crypto)"
           declare modified="$([[ "$modifications" ]] && echo true || echo false)"
           echo "::set-output name=modified::$modified"
           echo "Hash source modified in this commit? $modified"
@@ -99,6 +99,7 @@ jobs:
           # This must match the version in hash/_wasm/rust-toolchain:
           rust-version: 1.53.0
           targets: wasm32-unknown-unknown
+          components: rustfmt
 
       - name: Set up wasm-bindgen-cli
         run: |-
@@ -110,7 +111,7 @@ jobs:
         id: build
         if: success() && steps.source.outputs.modified == 'true'
         run: |-
-          ./hash/_wasm/build.ts
+          ./_wasm_crypto/_build.ts
 
           set -o errexit
           shopt -s inherit_errexit

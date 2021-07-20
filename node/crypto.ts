@@ -1,17 +1,33 @@
 // Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
 // Copyright Joyent, Inc. and Node.js contributors. All rights reserved. MIT license.
 import { default as randomBytes } from "./_crypto/randomBytes.ts";
-import {
-  createHash as stdCreateHash,
-  Hasher,
-  SupportedAlgorithm,
-  supportedAlgorithms,
-} from "../hash/mod.ts";
+import wasmCrypto from "../_wasm_crypto/mod.ts";
+import { digestAlgorithms, digestAliases } from "../_wasm_crypto/algorithms.ts";
 import { pbkdf2, pbkdf2Sync } from "./_crypto/pbkdf2.ts";
 import { Buffer } from "./buffer.ts";
 import { Transform } from "./stream.ts";
 import { TransformOptions } from "./_stream/transform.ts";
 import { encode as encodeToHex } from "../encoding/hex.ts";
+import { encode as encodeToBase64 } from "../encoding/base64.ts";
+
+const coerceToBytes = (data: string | BufferSource): Uint8Array => {
+  if (data instanceof Uint8Array) {
+    return data;
+  } else if (typeof data === "string") {
+    // This assumes UTF-8, which is probably not safe.
+    return new TextEncoder().encode(data);
+  } else if (ArrayBuffer.isView(data)) {
+    return new Uint8Array(
+      data.buffer,
+      data.byteOffset,
+      data.byteLength,
+    );
+  } else if (data instanceof ArrayBuffer) {
+    return new Uint8Array(data);
+  } else {
+    throw new TypeError("expected data to be string | BufferSource");
+  }
+};
 
 /**
  * The Hash class is a utility for creating hash digests of data. It can be used in one of two ways:
@@ -22,23 +38,33 @@ import { encode as encodeToHex } from "../encoding/hex.ts";
  * The crypto.createHash() method is used to create Hash instances. Hash objects are not to be created directly using the new keyword.
  */
 export class Hash extends Transform {
-  public hash: Hasher;
-  constructor(algorithm: SupportedAlgorithm, _opts?: TransformOptions) {
+  #context: wasmCrypto.DigestContext;
+
+  constructor(
+    algorithm: string | wasmCrypto.DigestContext,
+    _opts?: TransformOptions,
+  ) {
     super({
       transform(chunk: string, _encoding: string, callback: () => void): void {
-        hash.update(chunk);
+        context.update(coerceToBytes(chunk));
         callback();
       },
       flush(callback: () => void): void {
-        this.push(hash.digest());
+        this.push(context.digest(undefined));
         callback();
       },
     });
-    const hash = this.hash = stdCreateHash(algorithm);
+
+    const context = typeof algorithm === "string"
+      ? new wasmCrypto.DigestContext(algorithm)
+      : algorithm;
+
+    this.#context = context;
   }
 
-  // TODO(kt3k): Implement copy method
-  // copy(options) { ... }
+  copy(): Hash {
+    return new Hash(this.#context.clone());
+  }
 
   /**
    * Updates the hash content with the given data.
@@ -46,9 +72,9 @@ export class Hash extends Transform {
   update(data: string | ArrayBuffer, _encoding?: string): this {
     if (typeof data === "string") {
       data = new TextEncoder().encode(data);
-      this.hash.update(data);
+      this.#context.update(coerceToBytes(data));
     } else {
-      this.hash.update(data);
+      this.#context.update(coerceToBytes(data));
     }
     return this;
   }
@@ -58,24 +84,25 @@ export class Hash extends Transform {
    *
    * If encoding is provided a string will be returned; otherwise a Buffer is returned.
    *
-   * Supported encoding is currently 'hex' only. 'binary', 'base64' will be supported in the future versions.
+   * Supported encoding is currently 'hex', 'binary', 'base64'.
    */
   digest(encoding?: string): Buffer | string {
-    const digest = this.hash.digest();
+    const digest = this.#context.digest(undefined);
     if (encoding === undefined) {
       return Buffer.from(digest);
     }
 
     switch (encoding) {
-      case "hex": {
+      case "hex":
         return new TextDecoder().decode(encodeToHex(new Uint8Array(digest)));
-      }
-      // TODO(kt3k): Support more output encodings such as base64, binary, etc
-      default: {
+      case "binary":
+        return String.fromCharCode(...digest);
+      case "base64":
+        return encodeToBase64(digest);
+      default:
         throw new Error(
-          `The output encoding for hash digest is not impelemented: ${encoding}`,
+          `The output encoding for hash digest is not implemented: ${encoding}`,
         );
-      }
     }
   }
 }
@@ -85,17 +112,18 @@ export class Hash extends Transform {
  * using the given `algorithm`. Optional `options` argument controls stream behavior.
  */
 export function createHash(
-  algorithm: SupportedAlgorithm,
+  algorithm: string,
   opts?: TransformOptions,
 ) {
+  algorithm = digestAliases[algorithm.toUpperCase()] ?? algorithm.toUpperCase();
   return new Hash(algorithm, opts);
 }
 
 /**
  * Returns an array of the names of the supported hash algorithms, such as 'sha1'.
  */
-export function getHashes(): SupportedAlgorithm[] {
-  return supportedAlgorithms.slice();
+export function getHashes(): readonly string[] {
+  return digestAlgorithms;
 }
 
 export default { Hash, createHash, getHashes, pbkdf2, pbkdf2Sync, randomBytes };
