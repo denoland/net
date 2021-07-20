@@ -10,3 +10,6 @@ site."google.com".baz = 1
 a . b . c = 1
 a . b . d = 1
 a . e = 1
+
+'literal__\n__' = 1
+"basic__\n__" = 1

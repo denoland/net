@@ -10,3 +10,20 @@ path = "src/foo.rs"
 [[nib]]
 name = "node"
 path = "not_found"
+
+[a]
+[a.c]
+z = "z"
+
+[[b]]
+[b.c]
+z = "z"
+
+[[b]]
+[b.c]
+z = "z"
+
+[[aaa]]
+hi = "hi"
+[aaa.bbb]
+asdf = "asdf"

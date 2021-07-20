@@ -6,3 +6,5 @@ hosts = [
   "alpha",
   "omega"
 ] # comment
+
+profiles = [ { name = "John", "john@example.com" = true }, { name = "Doe", "doe@example.com" = true }, ]

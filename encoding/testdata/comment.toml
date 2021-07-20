@@ -21,6 +21,9 @@ features = ["#secure by default", "supports typescript # not a comment"] # Comme
 url = "https://deno.land/" # comment
 is_not_node = true # comment
 
+# """
+# '''
+
 [toml] # Comment caused Issue #7072 (case 2)
 name = "Tom's Obvious, Minimal Language"
 objectives = [ # Comment

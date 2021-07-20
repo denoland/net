@@ -2,7 +2,7 @@
 import { assertEquals, assertThrows } from "../testing/asserts.ts";
 import { existsSync } from "../fs/exists.ts";
 import * as path from "../path/mod.ts";
-import { parse, stringify, trim } from "./toml.ts";
+import { parse, stringify } from "./toml.ts";
 
 const moduleDir = path.dirname(path.fromFileUrl(import.meta.url));
 const testdataDir = path.resolve(moduleDir, "testdata");
@@ -20,18 +20,27 @@ Deno.test({
     const expected = {
       strings: {
         str0: "deno",
-        str1: "Roses are not Deno\nViolets are not Deno either",
+        str1: "Roses are not Deno\n          Violets are not Deno either",
         str2: "Roses are not Deno\nViolets are not Deno either",
         str3: "Roses are not Deno\r\nViolets are not Deno either",
         str4: 'this is a "quote"',
-        str5: "The quick brown\nfox jumps over\nthe lazy dog.",
-        str6: "The quick brown\nfox jumps over\nthe lazy dog.",
+        str5: "The quick brown fox jumps over the lazy dog.",
+        str6: "The quick brown fox jumps over the lazy dog.",
         str7: "Roses are red\tViolets are blue",
         str8: "Roses are red\fViolets are blue",
         str9: "Roses are red\bViolets are blue",
         str10: "Roses are red\\Violets are blue",
-        lines: "The first newline is\ntrimmed in raw strings.\n   All other " +
-          "whitespace\n   is preserved.",
+        str11: `dobule "quote"\nsingle 'quote'\n`,
+        str12: 'Here are two quotation marks: "". Simple enough.',
+        str13: 'Here are three quotation marks: """.',
+        str14: 'Here are fifteen quotation marks: """"""""""""""".',
+        str15: '"This," she said, "is just a pointless statement."',
+        literal1:
+          "The first newline is\ntrimmed in raw strings.\n   All other whitespace\n   is preserved.\n",
+        literal2: '"\\n#=*{',
+        literal3: "\\n\\t is 'literal'\\\n",
+        literal4: 'Here are fifteen quotation marks: """""""""""""""',
+        literal5: "Here are fifteen apostrophes: '''''''''''''''",
         withApostrophe: "What if it's not?",
         withSemicolon: `const message = 'hello world';`,
         withHexNumberLiteral:
@@ -124,6 +133,16 @@ Deno.test({
           [1, 2],
         ],
         hosts: ["alpha", "omega"],
+        profiles: [
+          {
+            "john@example.com": true,
+            name: "John",
+          },
+          {
+            "doe@example.com": true,
+            name: "Doe",
+          },
+        ],
       },
     };
     const actual = parseFile(path.join(testdataDir, "arrays.toml"));
@@ -158,6 +177,13 @@ Deno.test({
           dc: "eqdc20",
         },
       },
+      dog: {
+        "tater.man": {
+          type: {
+            name: "pug",
+          },
+        },
+      },
     };
     const actual = parseFile(path.join(testdataDir, "table.toml"));
     assertEquals(actual, expected);
@@ -175,6 +201,8 @@ Deno.test({
       "ʎǝʞ": 1,
       'this is "literal"': 1,
       'double "quote"': 1,
+      "basic__\n__": 1,
+      "literal__\\n__": 1,
     };
     const actual = parseFile(path.join(testdataDir, "keys.toml"));
     assertEquals(actual, expected);
@@ -187,7 +215,7 @@ Deno.test({
     const expected = {
       deno: "is",
       not: "[node]",
-      regex: "<ic*s*>",
+      regex: "<\\i\\c*\\s*>",
       NANI: "何?!",
       comment: "Comment inside # the comment",
     };
@@ -253,6 +281,22 @@ Deno.test({
             leaders: "tosin",
           },
         },
+        annotation_filter: { "kubernetes.io/ingress.class": "nginx" },
+        literal_key: {
+          "foo\\nbar": "foo\\nbar",
+        },
+        nested: {
+          parent: {
+            "child.ren": [
+              "[",
+              "]",
+            ],
+            children: [
+              "{",
+              "}",
+            ],
+          },
+        },
       },
     };
     const actual = parseFile(path.join(testdataDir, "inlineTable.toml"));
@@ -269,6 +313,31 @@ Deno.test({
         { name: "deno_core", path: "src/foo.rs" },
       ],
       nib: [{ name: "node", path: "not_found" }],
+      a: {
+        c: {
+          z: "z",
+        },
+      },
+      b: [
+        {
+          c: {
+            z: "z",
+          },
+        },
+        {
+          c: {
+            z: "z",
+          },
+        },
+      ],
+      aaa: [
+        {
+          bbb: {
+            asdf: "asdf",
+          },
+          hi: "hi",
+        },
+      ],
     };
     const actual = parseFile(path.join(testdataDir, "arrayTable.toml"));
     assertEquals(actual, expected);
@@ -479,9 +548,9 @@ Deno.test({
       str0: "value",
       str1: "# This is not a comment",
       str2:
-        " # this is not a comment!\nA multiline string with a #\n# this is also not a comment",
+        " # this is not a comment!\nA multiline string with a #\n# this is also not a comment\n",
       str3:
-        '"# not a comment"\n\t# this is a real tab on purpose \n# not a comment',
+        '"# not a comment"\n\t# this is a real tab on purpose \n# not a comment\n',
       point0: { x: 1, y: 2, str0: "#not a comment", z: 3 },
       point1: { x: 7, y: 8, z: 9, str0: "#not a comment" },
       deno: {
@@ -541,7 +610,7 @@ Deno.test({
         parseFile(path.join(testdataDir, "error-open-string.toml"));
       },
       Error,
-      `Single-line string is not closed:\nbadComment = 'The first newline is`,
+      `Parse error on line 1, column 34: Single-line string cannot contain EOL`,
     );
   },
 });
@@ -554,7 +623,7 @@ Deno.test({
         parseFile(path.join(testdataDir, "error-invalid-string.toml"));
       },
       Error,
-      `Invalid data format: BAR`,
+      `invalid data format`,
     );
   },
 });
@@ -567,37 +636,14 @@ Deno.test({
         parseFile(path.join(testdataDir, "error-invalid-whitespace1.toml"));
       },
       Error,
-      'Contains invalid whitespaces: `\\u3000foo = "bar"`',
+      "Contains invalid whitespaces: `\\u3000`",
     );
     assertThrows(
       (): void => {
         parseFile(path.join(testdataDir, "error-invalid-whitespace2.toml"));
       },
       Error,
-      "Contains invalid whitespaces: `foo\\u3000`",
-    );
-  },
-});
-
-Deno.test({
-  name: "[TOML] Internal trim function",
-  fn(): void {
-    assertEquals(trim(""), "");
-    assertEquals(trim(" \tfoo  \t"), "foo");
-    assertEquals(trim(" foo\u3000foo "), "foo\u3000foo");
-    assertThrows(
-      (): void => {
-        trim("\u3000foo");
-      },
-      Error,
-      "Contains invalid whitespaces: `\\u3000foo`",
-    );
-    assertThrows(
-      (): void => {
-        trim("foo\u3000");
-      },
-      Error,
-      "Contains invalid whitespaces: `foo\\u3000`",
+      "Contains invalid whitespaces: `\\u3000`",
     );
   },
 });

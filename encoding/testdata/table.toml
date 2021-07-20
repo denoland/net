@@ -11,3 +11,7 @@ name = "Tom Preston-Werner"
   [servers.beta]
   ip = "10.0.0.2"
   dc = "eqdc20"
+
+# Naming rules for tables are the same as for keys
+[dog."tater.man"]
+type.name = "pug"

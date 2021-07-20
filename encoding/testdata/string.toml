@@ -26,12 +26,28 @@ str7 = "Roses are red\tViolets are blue"
 str8 = "Roses are red\fViolets are blue"
 str9 = "Roses are red\bViolets are blue"
 str10 = "Roses are red\\Violets are blue"
-lines  = '''
+str11 = """
+dobule "quote"
+single 'quote'
+"""
+str12 = """Here are two quotation marks: "". Simple enough."""
+str13 = """Here are three quotation marks: ""\"."""
+str14 = """Here are fifteen quotation marks: ""\"""\"""\"""\"""\"."""
+str15 = """"This," she said, "is just a pointless statement.""""
+
+literal1  = '''
 The first newline is
 trimmed in raw strings.
    All other whitespace
    is preserved.
 '''
+
+literal2 = '"\n#=*{'
+literal3 = '''
+\n\t is 'literal'\
+'''
+literal4 = '''Here are fifteen quotation marks: """""""""""""""'''
+literal5 = "Here are fifteen apostrophes: '''''''''''''''"
 
 withApostrophe = "What if it's not?"
 withSemicolon = "const message = 'hello world';"
